@@ -1,4 +1,4 @@
-import Manhattan from './manhattan';
+const Manhattan = require('./manhattan');
 
 new Manhattan({ corr: 2, unit: 19 }, { corr: 2, unit: 19 }).distance
 

@@ -23,7 +23,6 @@
     "typescript": "^4.0.5"
   },
   "scripts": {
-    "watch": "tsc -w",
-    "dev": "nodemon dist/refactor.js"
+    "dev": "nodemon"
   }
 }

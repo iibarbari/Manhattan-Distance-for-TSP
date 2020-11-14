@@ -1,4 +1,4 @@
-class Manhattan {
+export default class Manhattan {
   from: From;
   fromDir: boolean;
   fromPoint: number;
@@ -81,5 +81,3 @@ class Manhattan {
     return distance;
   }
 }
-
-module.exports = Manhattan;
