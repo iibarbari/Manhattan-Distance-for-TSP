@@ -1,4 +1,4 @@
-import { Manhattan } from '../manhattan';
+import { Manhattan } from '../scripts';
 import { expect } from 'chai';
 import 'mocha';
 

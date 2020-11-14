@@ -1,4 +1,4 @@
-const { Manhattan } = require('./manhattan');
+const { Manhattan } = require('./scripts');
 
 // new Manhattan({ corr: 2, unit: 19 }, { corr: 2, unit: 19 }).distance
 //
