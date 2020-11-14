@@ -1,4 +1,14 @@
-export default class Manhattan {
+type From = {
+  corr: number,
+  unit: number,
+}
+
+type To = {
+  corr: number,
+  unit: number,
+}
+
+export class Manhattan {
   from: From;
   fromDir: boolean;
   fromPoint: number;
@@ -23,6 +33,13 @@ export default class Manhattan {
     return corr % 2 === 1;
   }
 
+  outerDistance = () => {
+    const { from, to, lateralLength, fromDir, toDir, hallLength } = this;
+    const lateral = Math.abs(to.corr - from.corr) * lateralLength;
+
+    return fromDir === toDir ? hallLength + lateral : lateral;
+  };
+
   handleSameCorridor(direction?: true) {
     const { fromDir, lateralLength, hallLength, fromPoint, toPoint } = this;
 
@@ -38,24 +55,43 @@ export default class Manhattan {
   }
 
   handleDiffCorridorsDiffDirs() {
-    const { to, from, fromDir, lateralLength, hallLength, fromPoint, toPoint } = this;
+    const { fromDir, hallLength, fromPoint, toPoint } = this;
 
     if (fromDir) {
-      return Math.abs(to.corr - from.corr) * lateralLength + (hallLength - fromPoint + 1) + (hallLength - toPoint);
+      return this.outerDistance() + (hallLength - fromPoint + 1) + (hallLength - toPoint);
     } else {
-      return Math.abs(to.corr - from.corr) * lateralLength + fromPoint - 1 + toPoint;
+      return this.outerDistance() + fromPoint - 1 + toPoint;
     }
   }
 
   handleDiffCorridorsSameDir() {
-    const { to, from, fromDir, lateralLength, hallLength, fromPoint, toPoint } = this;
+    const { fromDir, hallLength, fromPoint, toPoint } = this;
 
     if (fromDir) {
-      return Math.abs(to.corr - from.corr) * lateralLength + hallLength + (hallLength - fromPoint) + toPoint;
+      return this.outerDistance() + (hallLength - fromPoint) + toPoint;
     } else {
-      return Math.abs(to.corr - from.corr) * lateralLength + hallLength + (fromPoint - 1) + (hallLength - toPoint + 1);
+      return this.outerDistance() + (fromPoint - 1) + (hallLength - toPoint + 1);
     }
   }
+
+  get details() {
+    const { fromDir, toDir, from, to } = this;
+
+    return [
+      (fromDir ? 'up' : 'down'),
+      (toDir ? 'up' : 'down'),
+      (from.corr == to.corr && from.unit === to.unit ? 'stays' : 'moves'),
+      (from.corr == to.corr ? 'same' : 'different'),
+      (
+        from.corr > to.corr ||
+        (from.corr === to.corr && fromDir && to.unit > from.unit) ||
+        (from.corr === to.corr && !fromDir && from.unit > to.unit) ?
+          'forwards' :
+          'backwards'
+      )
+    ].join('|');
+  }
+
 
   get distance() {
     const { to, from, fromDir, toDir } = this;
@@ -76,7 +112,7 @@ export default class Manhattan {
       distance = this.handleDiffCorridorsSameDir();
     }
 
-    console.log(`From ${from.corr}-${from.unit} to ${to.corr}-${to.unit} the manhattan distance is ${distance}`);
+    // console.log(`From ${from.corr}-${from.unit} to ${to.corr}-${to.unit} the manhattan distance is ${distance}`);
 
     return distance;
   }
