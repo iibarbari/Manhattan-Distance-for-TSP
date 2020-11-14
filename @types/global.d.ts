@@ -7,5 +7,3 @@ type To = {
   corr: number,
   unit: number,
 }
-
-type Direction = true

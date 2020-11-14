@@ -1,86 +1,85 @@
-const hallLength = 14;
-const lateralLength = 2;
+class Manhattan {
+  from: From;
+  fromDir: boolean;
+  fromPoint: number;
+  hallLength: number;
+  lateralLength: number;
+  to: To;
+  toDir: boolean;
+  toPoint: number;
 
-function findDirection(corr: number) {
-  return corr % 2 === 1;
-}
+  constructor(from: From, to: To, lateralLength = 2, hallLength = 14) {
+    this.from = from;
+    this.fromDir = this.findDirection(from.corr);
+    this.fromPoint = Math.round(from.unit / 2);
+    this.hallLength = hallLength;
+    this.lateralLength = lateralLength;
+    this.to = to;
+    this.toDir = this.findDirection(to.corr);
+    this.toPoint = Math.round(to.unit / 2);
+  }
 
-function handleSameCorridor(from: From, to: To, direction?: Direction) {
-  const fromPoint = Math.round(from.unit / 2);
-  const toPoint = Math.round(to.unit / 2);
+  findDirection(corr: number) {
+    return corr % 2 === 1;
+  }
 
-  if (direction) {
-    return Math.abs(toPoint - fromPoint);
-  } else {
-    if (findDirection(from.corr)) {
-      return 2 * lateralLength + 2 * hallLength -fromPoint + toPoint;
+  handleSameCorridor(direction?: true) {
+    const { fromDir, lateralLength, hallLength, fromPoint, toPoint } = this;
+
+    if (direction) {
+      return Math.abs(toPoint - fromPoint);
     } else {
-      return 2 * lateralLength + 2 * hallLength - toPoint + fromPoint;
+      if (fromDir) {
+        return 2 * lateralLength + 2 * hallLength - fromPoint + toPoint;
+      } else {
+        return 2 * lateralLength + 2 * hallLength - toPoint + fromPoint;
+      }
     }
   }
-}
 
-function handleDiffCorridorsDiffDirs(from: From, to: To) {
-  const fromPoint = Math.round(from.unit / 2);
-  const toPoint = Math.round(to.unit / 2);
+  handleDiffCorridorsDiffDirs() {
+    const { to, from, fromDir, lateralLength, hallLength, fromPoint, toPoint } = this;
 
-  if (findDirection(from.corr)) {
-    return Math.abs(to.corr - from.corr) * lateralLength + (hallLength - fromPoint + 1) + (hallLength - toPoint);
-  } else {
-    return Math.abs(to.corr - from.corr) * lateralLength + fromPoint - 1 + toPoint;
-  }
-}
-
-function handleDiffCorridorsSameDir(from: From, to: To) {
-  const fromPoint = Math.round(from.unit / 2);
-  const toPoint = Math.round(to.unit / 2);
-
-  if (findDirection(from.corr)) {
-    return Math.abs(to.corr - from.corr) * lateralLength + hallLength + (hallLength - fromPoint) + toPoint;
-  } else {
-    return Math.abs(to.corr - from.corr) * lateralLength + hallLength + (fromPoint - 1) + (hallLength - toPoint + 1);
-  }
-}
-
-module.exports = function manhattan(from: From, to: To) {
-  const fromDir = findDirection(from.corr);
-  const toDir = findDirection(to.corr);
-
-  let distance;
-
-  console.log(`From ${from.corr}-${from.unit} to ${to.corr}-${to.unit}`);
-
-  if (from.corr === to.corr) {
-    if (fromDir && to.unit > from.unit || !fromDir && to.unit < from.unit) {
-      distance = handleSameCorridor(from, to, true);
-    } else if (fromDir && from.unit > to.unit || !fromDir && from.unit < to.unit) {
-      distance = handleSameCorridor(from, to);
+    if (fromDir) {
+      return Math.abs(to.corr - from.corr) * lateralLength + (hallLength - fromPoint + 1) + (hallLength - toPoint);
     } else {
-      distance = 0;
-    }
-  } else if (from.corr !== to.corr && fromDir !== toDir) {
-    if (fromDir && from.corr < to.corr) {
-      distance = handleDiffCorridorsDiffDirs(from, to);
-    } else if (fromDir && from.corr > to.corr) {
-      distance = handleDiffCorridorsDiffDirs(from, to);
-    } else if (!fromDir && from.corr < to.corr) {
-      distance = handleDiffCorridorsDiffDirs(from, to);
-    } else if (!fromDir && from.corr > to.corr) {
-      distance = handleDiffCorridorsDiffDirs(from, to);
-    }
-  } else if (from.corr !== to.corr && fromDir === toDir) {
-    if (fromDir && from.corr < to.corr) {
-      distance = handleDiffCorridorsSameDir(from, to);
-    } else if (fromDir && from.corr > to.corr) {
-      distance = handleDiffCorridorsSameDir(from, to);
-    } else if (!fromDir && from.corr < to.corr) {
-      distance = handleDiffCorridorsSameDir(from, to);
-    } else if (!fromDir && from.corr > to.corr) {
-      distance = handleDiffCorridorsSameDir(from, to);
+      return Math.abs(to.corr - from.corr) * lateralLength + fromPoint - 1 + toPoint;
     }
   }
 
-  console.log(`Manhattan distance is ${distance}`);
+  handleDiffCorridorsSameDir() {
+    const { to, from, fromDir, lateralLength, hallLength, fromPoint, toPoint } = this;
 
-  return distance;
-};
+    if (fromDir) {
+      return Math.abs(to.corr - from.corr) * lateralLength + hallLength + (hallLength - fromPoint) + toPoint;
+    } else {
+      return Math.abs(to.corr - from.corr) * lateralLength + hallLength + (fromPoint - 1) + (hallLength - toPoint + 1);
+    }
+  }
+
+  get distance() {
+    const { to, from, fromDir, toDir } = this;
+
+    let distance;
+
+    if (from.corr === to.corr) {
+      if (fromDir && to.unit > from.unit || !fromDir && to.unit < from.unit) {
+        distance = this.handleSameCorridor(true);
+      } else if (fromDir && from.unit > to.unit || !fromDir && from.unit < to.unit) {
+        distance = this.handleSameCorridor();
+      } else {
+        distance = 0;
+      }
+    } else if (from.corr !== to.corr && fromDir !== toDir) {
+      distance = this.handleDiffCorridorsDiffDirs();
+    } else if (from.corr !== to.corr && fromDir === toDir) {
+      distance = this.handleDiffCorridorsSameDir();
+    }
+
+    console.log(`From ${from.corr}-${from.unit} to ${to.corr}-${to.unit} the manhattan distance is ${distance}`);
+
+    return distance;
+  }
+}
+
+module.exports = Manhattan;
