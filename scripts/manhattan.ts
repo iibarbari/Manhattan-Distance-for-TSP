@@ -112,8 +112,6 @@ export class Manhattan {
       distance = this.handleDiffCorridorsSameDir();
     }
 
-    // console.log(`From ${from.corr}-${from.unit} to ${to.corr}-${to.unit} the manhattan distance is ${distance}`);
-
     return distance;
   }
 }
