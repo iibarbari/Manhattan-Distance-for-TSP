@@ -9,6 +9,7 @@ type To = {
 }
 
 export class Manhattan {
+  cornerLength: number;
   from: From;
   fromDir: boolean;
   fromPoint: number;
@@ -18,7 +19,8 @@ export class Manhattan {
   toDir: boolean;
   toPoint: number;
 
-  constructor(from: From, to: To, lateralLength = 2, hallLength = 14) {
+  constructor(from: From, to: To, lateralLength = 2, hallLength = 14, cornerLength = 1) {
+    this.cornerLength = cornerLength;
     this.from = from;
     this.fromDir = this.findDirection(from.corr);
     this.fromPoint = Math.round(from.unit / 2);
@@ -34,22 +36,22 @@ export class Manhattan {
   }
 
   outerDistance = () => {
-    const { from, to, lateralLength, fromDir, toDir, hallLength } = this;
-    const lateral = Math.abs(to.corr - from.corr) * lateralLength;
+    const { cornerLength, from, to, lateralLength, fromDir, toDir, hallLength } = this;
+    const lateral = Math.abs(to.corr - from.corr) * (lateralLength + cornerLength);
 
     return fromDir === toDir ? hallLength + lateral : lateral;
   };
 
   handleSameCorridor(direction?: true) {
-    const { fromDir, lateralLength, hallLength, fromPoint, toPoint } = this;
+    const { cornerLength, fromDir, lateralLength, hallLength, fromPoint, toPoint } = this;
 
     if (direction) {
       return Math.abs(toPoint - fromPoint);
     } else {
       if (fromDir) {
-        return 2 * lateralLength + 2 * hallLength - fromPoint + toPoint;
+        return 2 * (lateralLength + cornerLength) + 2 * hallLength - fromPoint + toPoint;
       } else {
-        return 2 * lateralLength + 2 * hallLength - toPoint + fromPoint;
+        return 2 * (lateralLength + cornerLength) + 2 * hallLength - toPoint + fromPoint;
       }
     }
   }
@@ -112,6 +114,7 @@ export class Manhattan {
       distance = this.handleDiffCorridorsSameDir();
     }
 
+    console.log(`From ${from.corr}-${from.unit} to ${to.corr}-${to.unit} - ${distance}`);
     return distance;
   }
 }

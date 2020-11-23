@@ -8,12 +8,12 @@ export class NearestNeighbour {
   lastVisited: number;
   matrix: Matrix;
   path: number;
-  visitedCities: number[];
   paths: {
     order: number[],
     lengths: number[],
     sum: number
   }[];
+  visitedCities: number[];
 
   constructor(matrix: Matrix) {
     this.matrix = matrix;
