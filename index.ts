@@ -1,14 +1,26 @@
 const _ = require('lodash');
-const { Manhattan, NearestNeighbour } = require('./scripts');
+const { Matrix, NearestNeighbour } = require('./scripts');
 
-const manhattanMatrix = Array(6).fill([...Array(14)])
-
-_.range(1, 6).forEach((corr: number) => {
-  _.range(1, 29).forEach((unit: number) => {
-    new Manhattan({ unit: 1, corr: 3 }, { unit, corr }).distance;
-  });
-});
-
+//
+// const matrix = new Matrix([{
+//   unit: 1,
+//   corr: 1
+// }, {
+//   unit: 1,
+//   corr: 2
+// }, {
+//   unit: 1,
+//   corr: 3
+// }, {
+//   unit: 1,
+//   corr: 4
+// }, {
+//   unit: 1,
+//   corr: 5
+// }, {
+//   unit: 1,
+//   corr: 6
+// }]).calculateMatrix;
 
 // Nearest Neighbour Test
 const paths = new NearestNeighbour([
@@ -18,5 +30,7 @@ const paths = new NearestNeighbour([
   [164, 201, 113, 0, 196],
   [58, 79, 303, 196, 0]
 ]).tour();
+
+// const paths = new NearestNeighbour(matrix);
 
 console.log(paths);
