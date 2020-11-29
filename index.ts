@@ -1,26 +1,27 @@
 const _ = require('lodash');
 const { Matrix, NearestNeighbour } = require('./scripts');
 
-//
-// const matrix = new Matrix([{
-//   unit: 1,
-//   corr: 1
-// }, {
-//   unit: 1,
-//   corr: 2
-// }, {
-//   unit: 1,
-//   corr: 3
-// }, {
-//   unit: 1,
-//   corr: 4
-// }, {
-//   unit: 1,
-//   corr: 5
-// }, {
-//   unit: 1,
-//   corr: 6
-// }]).calculateMatrix;
+const matrix = new Matrix([{
+  unit: 1,
+  corr: 1
+}, {
+  unit: 1,
+  corr: 2
+}, {
+  unit: 1,
+  corr: 3
+}, {
+  unit: 1,
+  corr: 4
+}, {
+  unit: 1,
+  corr: 5
+}, {
+  unit: 1,
+  corr: 6
+}]).calculateMatrix;
+
+console.log(matrix);
 
 // Nearest Neighbour Test
 const paths = new NearestNeighbour([
@@ -33,4 +34,5 @@ const paths = new NearestNeighbour([
 
 // const paths = new NearestNeighbour(matrix);
 
-console.log(paths);
+// console.log(paths);
+

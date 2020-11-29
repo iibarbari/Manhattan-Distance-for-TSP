@@ -15,8 +15,8 @@ export class Manhattan {
   toPoint: number;
 
   constructor(
-    from = { corr: 1, unit: 1 },
-    to = { corr: 1, unit: 1 },
+    from: Point,
+    to: Point,
     lateralLength = 2,
     hallLength = 14,
     cornerLength = 2
@@ -103,19 +103,13 @@ export class Manhattan {
     }
   }
 
-  distance2() {
-    const { fromDir, toDir, from, to } = this;
-
-
-  }
-
-
   distance(givenFrom = this.from, givenTo = this.to, givenFromDir = this.fromDir, givenToDir = this.toDir) {
+    const { fromDir, toDir, from, to } = this;
     if (givenFrom !== undefined && givenTo !== undefined) {
       let distance;
 
-      if (givenFrom.corr === givenTo.corr) {
-        if (Math.round(givenFrom.unit / 2) === Math.round(givenTo.unit / 2)) {
+      if (from.corr === to.corr) {
+        if (Math.round(from.unit / 2) === Math.round(to.unit / 2)) {
           distance = 0;
         } else {
           if (givenFromDir && givenTo.unit > givenFrom.unit || !givenFromDir && givenTo.unit < givenTo.unit) {
@@ -140,77 +134,92 @@ export class Manhattan {
   }
 }
 
-
-export class DistanceToInitial extends Manhattan {
+export class Initial {
   point: Point;
   center: Point;
-  goesBack?: true;
+  from?: boolean;
 
-  constructor(point: Point, goesBack?: true) {
-    super({ unit: 14, corr: 4 }, { unit: point.unit, corr: point.corr });
-
+  constructor(point: Point, from = true) {
     this.point = point;
-    this.goesBack = goesBack;
     this.center = { unit: 1, corr: 4 };
+    this.from = from;
   }
 
-  outerDistanceToInitial(up: boolean) {
-    const { from, to } = this;
+  findDirection() {
+    return this.point.corr % 2 === 1;
+  }
 
-    if (up) {
+  findNearestDownCorr() {
+    if (this.point.corr >= this.center.corr) {
+      return this.point.corr - 1;
+    }
+    return this.point.corr + 1;
+  }
 
-      return Math.abs(to.corr - from.corr);
+  findLateralLength(corr: number) {
+    const passedCors = Math.abs(this.center.corr - corr);
+    const lateralLength = 2;
+    const cornerLength = 2;
 
+    if (corr >= this.center.corr) {
+      return ((passedCors + 1) * cornerLength) + (passedCors * lateralLength) + 0.5 * lateralLength;
     } else {
-      return Math.round(Math.abs(to.corr - from.corr) / 2) * (2 * this.cornerLength + this.lateralLength) + 1;
+      return ((passedCors + 1) * cornerLength) + (passedCors * lateralLength) - cornerLength - 0.5 * lateralLength;
     }
   }
 
-  getThis() {
-    const { fromDir, point, center } = this;
+  get calculateLength() {
+    const dir = this.findDirection();
 
-    if (this.goesBack) {
-      // let distance = this.distance(point, center);
-      if (fromDir) {
+    let distance;
+    if (this.from) {
+      if (dir) {
+        const nearestCorr = this.findNearestDownCorr();
+        const nearestCorrExitLength = new Manhattan({
+          unit: this.point.unit, corr: this.point.corr
+        }, {
+          unit: 1, corr: nearestCorr
+        }).distance();
 
-      } else {
-      }
-
-      // console.log(distance);
-
-      // console.log(`From ${point.corr}-${point.unit} to center - ${distance}`);
-
-    } else {
-      let distance = this.distance(center, point);
-
-      if (point.corr === center.corr) {
-        if (Math.round(point.unit / 2) === Math.round(center.unit / 2)) {
-          distance = 3 * this.cornerLength + this.lateralLength * 1.5 + 2 * this.hallLength;
-        } else {
-          distance = <number>this.distance(center, point) - this.lateralLength / 2 - this.cornerLength;
+        if (typeof nearestCorrExitLength === 'number') {
+          distance = nearestCorrExitLength + this.findLateralLength(nearestCorr);
         }
-      } else if (point.corr < center.corr) {
-        distance = <number>this.distance(center, point) - this.lateralLength / 2 - this.cornerLength;
+      } else {
+        distance = this.findLateralLength(this.point.corr) - 1 + Math.round(this.point.unit / 2);
       }
+    } else {
+      if (dir) {
+        distance = this.findLateralLength(this.point.corr) + Math.round(this.point.unit / 2);
+      } else {
+        const nearestCorr = this.findNearestDownCorr();
+        const nearestCorrExitLength = new Manhattan({
+          unit: 1, corr: nearestCorr
+        }, {
+          unit: this.point.unit, corr: this.point.corr
+        }).distance();
 
-      console.log(`From center to ${point.corr}-${point.unit} - ${distance}`);
+        if (typeof nearestCorrExitLength === 'number') {
+          distance = nearestCorrExitLength + this.findLateralLength(nearestCorr) + 1;
+        }
+      }
     }
+    console.log({ distance, point: this.point });
+    return distance;
   }
 }
 
-// new DistanceToInitial({ unit: 1, corr: 2 }, true).getThis();
 
-// new DistanceToInitial({ unit: 1, corr: 2 }, true).getThis();
-// new DistanceToInitial({ unit: 1, corr: 3 }, true).getThis();
-// new DistanceToInitial({ unit: 1, corr: 4 }, true).getThis();
-// new DistanceToInitial({ unit: 3, corr: 4 }, true).getThis();
-// new DistanceToInitial({ unit: 1, corr: 5 }, true).getThis();
-// new DistanceToInitial({ unit: 1, corr: 6 }, true).getThis();
+// new Initial({ unit: 1, corr: 1 }).calculateLength;
+// new Initial({ unit: 1, corr: 2 }).calculateLength;
+// new Initial({ unit: 1, corr: 3 }).calculateLength;
+// new Initial({ unit: 1, corr: 4 }).calculateLength;
+// new Initial({ unit: 1, corr: 5 }).calculateLength;
+// new Initial({ unit: 1, corr: 6 }).calculateLength;
 
-new DistanceToInitial({ unit: 1, corr: 1 }).getThis();
-new DistanceToInitial({ unit: 1, corr: 2 }).getThis();
-new DistanceToInitial({ unit: 1, corr: 3 }).getThis();
-new DistanceToInitial({ unit: 1, corr: 4 }).getThis();
-new DistanceToInitial({ unit: 3, corr: 4 }).getThis();
-new DistanceToInitial({ unit: 1, corr: 5 }).getThis();
-new DistanceToInitial({ unit: 1, corr: 6 }).getThis();
+// new Initial({ unit: 1, corr: 1 }, false).calculateLength;
+// new Initial({ unit: 1, corr: 2 }, false).calculateLength;
+// new Initial({ unit: 1, corr: 3 }, false).calculateLength;
+// new Initial({ unit: 2, corr: 4 }, false).calculateLength;
+// new Initial({ unit: 1, corr: 5 }, false).calculateLength;
+// new Initial({ unit: 1, corr: 6 }, false).calculateLength;
+
