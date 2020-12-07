@@ -1,5 +1,114 @@
 const { isEqual } = require('lodash');
 
+function initial(from: Point, to: Point) {
+  // Depot variables
+  const corridors = 6;
+  const units = 28;
+
+  // Lateral variables
+  const corner = 2;
+  const lateral = 1;
+
+  function corrIsUpwards(corr: number) {
+    return corr % 2 === 1;
+  }
+
+  function distance(from: number[], to: number[]) {
+    // doesn't move
+    if (isEqual(from, to)) {
+      return 0;
+    }
+
+    // starts from initial point
+    else if (isEqual(from, [0, 0])) {
+      const midPoint = (corner * corridors + (corridors - 1) * lateral * 2) / 2;
+      const corrLateralDistance =
+        (to[0] - 1) * corner + (to[0] - 1) * lateral * 2;
+
+      let lateralLength = 0;
+
+      if (corrIsUpwards(to[0])) {
+        if (midPoint > corrLateralDistance) {
+          lateralLength = midPoint - corrLateralDistance;
+        } else {
+          lateralLength = corrLateralDistance - midPoint + corner;
+        }
+      } else {
+        if (to[0] === corridors / 2 + 1) {
+          lateralLength = 2 * corner + 2 * lateral + lateral + corner;
+        } else if (midPoint > corrLateralDistance) {
+          lateralLength = 2 * corner + 2 * lateral + lateral + corner;
+        } else {
+          lateralLength = 4 * corner + 4 * lateral + lateral;
+        }
+      }
+
+      // has to go upwards
+      if (corrIsUpwards(to[0])) {
+        return lateralLength + Math.round(to[1] / 2);
+      } else {
+        return lateralLength + units + Math.round(to[1] / 2) - 1;
+      }
+    }
+
+    // goes back to initial point
+    else if (isEqual([0, 0], to)) {
+      const midPoint = (corner * corridors + (corridors - 1) * lateral * 2) / 2;
+      const corrLateralDistance =
+        from[0] * corner + (from[0] - 1) * lateral * 2;
+
+      let lateralLength = 0;
+
+      // calculate lateral length
+      // goes upwards
+      if (corrIsUpwards(from[0])) {
+        // exception
+        if (from[0] === corridors / 2) {
+          lateralLength = 3 * corner + 3 * lateral;
+        }
+
+        // if corr is after midPoint
+        else if (corrLateralDistance > midPoint) {
+          lateralLength = corrLateralDistance - midPoint + corner;
+        }
+
+        // if corr is before midPoint
+        else {
+          lateralLength = midPoint - corrLateralDistance + 2 * corner;
+        }
+      }
+      // goes downwards
+      else {
+        // if corr is after midPoint
+        if (corrLateralDistance > midPoint) {
+          lateralLength = corrLateralDistance - midPoint - corner;
+        }
+
+        // if corr is before midPoint
+        else {
+          lateralLength = midPoint - corrLateralDistance;
+        }
+      }
+
+      // calculate distance
+      // has to go upwards
+      if (corrIsUpwards(from[0])) {
+        const passedCorridor = units / 2;
+        const exitCorr = units / 2 - Math.round(from[1] / 2);
+
+        return exitCorr + passedCorridor + lateralLength;
+      }
+
+      // has to go downwards
+      else {
+        return lateralLength + corner + Math.round(from[1] / 2) - 1;
+      }
+    }
+  }
+
+  return distance([from.corr, from.unit], [to.corr, to.unit]);
+}
+
 type Point = {
   corr: number,
   unit: number,
@@ -114,7 +223,7 @@ export class Manhattan {
       let distance;
 
       // starts from initial and goes to initial
-      if (givenFrom.unit === 0 && givenFrom.corr === 0 && givenTo.unit === 0 && givenTo.corr === 0) {
+      if (isEqual(givenTo, givenFrom)) {
         distance = 0;
 
         // starts from initial
@@ -128,7 +237,7 @@ export class Manhattan {
         // travels from unit o unit
       } else {
         if (givenFrom.corr === givenTo.corr) {
-          if (Math.round(givenFrom.unit / 2) === Math.round(givenFrom.unit / 2)) {
+          if (Math.round(givenFrom.unit / 2) === Math.round(givenTo.unit / 2)) {
             distance = 0;
           } else {
             if (givenFromDir && givenTo.unit > givenFrom.unit || !givenFromDir && givenTo.unit < givenTo.unit) {
@@ -152,128 +261,4 @@ export class Manhattan {
     return new Error('Please give two points');
   }
 }
-
-function initial(from: Point, to: Point) {
-  // Depot variables
-  const corridors = 6;
-  const units = 28;
-
-  // Lateral variables
-  const corner = 2;
-  const lateral = 1;
-
-  function corrIsUpwards(corr: number) {
-    return corr % 2 === 1;
-  }
-
-  function distance(from: number[], to: number[]) {
-    // doesn't move
-    if (isEqual(from, to)) {
-      return 0;
-    }
-
-    // starts from initial point
-    else if (isEqual(from, [0, 0])) {
-      const midPoint = (corner * corridors + (corridors - 1) * lateral * 2) / 2;
-      const corrLateralDistance =
-        (to[0] - 1) * corner + (to[0] - 1) * lateral * 2;
-
-      let lateralLength = 0;
-
-      if (corrIsUpwards(to[0])) {
-        if (midPoint > corrLateralDistance) {
-          lateralLength = midPoint - corrLateralDistance;
-        } else {
-          lateralLength = corrLateralDistance - midPoint + corner;
-        }
-      } else {
-        if (to[0] === corridors / 2 + 1) {
-          lateralLength = 2 * corner + 2 * lateral + lateral + corner;
-        } else if (midPoint > corrLateralDistance) {
-          lateralLength = 2 * corner + 2 * lateral + lateral + corner;
-        } else {
-          lateralLength = 4 * corner + 4 * lateral + lateral;
-        }
-      }
-
-      // has to go upwards
-      if (corrIsUpwards(to[0])) {
-        return lateralLength + Math.round(to[1] / 2);
-      } else {
-        return lateralLength + units + Math.round(to[1] / 2) - 1;
-      }
-    }
-
-    // goes back to initial point
-    else if (isEqual([0, 0], to)) {
-      const midPoint = (corner * corridors + (corridors - 1) * lateral * 2) / 2;
-      const corrLateralDistance =
-        from[0] * corner + (from[0] - 1) * lateral * 2;
-
-      let lateralLength = 0;
-
-      // calculate lateral length
-      // goes upwards
-      if (corrIsUpwards(from[0])) {
-        // exception
-        if (from[0] === corridors / 2) {
-          lateralLength = 3 * corner + 3 * lateral;
-        }
-
-        // if corr is after midPoint
-        else if (corrLateralDistance > midPoint) {
-          lateralLength = corrLateralDistance - midPoint + corner;
-        }
-
-        // if corr is before midPoint
-        else {
-          lateralLength = midPoint - corrLateralDistance + 2 * corner;
-        }
-      }
-      // goes downwards
-      else {
-        // if corr is after midPoint
-        if (corrLateralDistance > midPoint) {
-          lateralLength = corrLateralDistance - midPoint - corner;
-        }
-
-        // if corr is before midPoint
-        else {
-          lateralLength = midPoint - corrLateralDistance;
-        }
-      }
-
-      // calculate distance
-      // has to go upwards
-      if (corrIsUpwards(from[0])) {
-        const passedCorridor = units / 2;
-        const exitCorr = units / 2 - Math.round(from[1] / 2);
-
-        return exitCorr + passedCorridor + lateralLength;
-      }
-
-      // has to go downwards
-      else {
-        return lateralLength + corner + Math.round(from[1] / 2) - 1;
-      }
-    }
-  }
-
-  return distance([from.corr, from.unit], [to.corr, to.unit]);
-}
-
-
-// new Initial({ unit: 1, corr: 1 }).calculateLength;
-// new Initial({ unit: 1, corr: 2 }).calculateLength;
-// new Initial({ unit: 1, corr: 3 }).calculateLength;
-// new Initial({ unit: 1, corr: 4 }).calculateLength;
-// new Initial({ unit: 1, corr: 5 }).calculateLength;
-// new Initial({ unit: 1, corr: 6 }).calculateLength;
-
-// new Initial({ unit: 1, corr: 1 }, false).calculateLength;
-// new Initial({ unit: 1, corr: 2 }, false).calculateLength;
-// new Initial({ unit: 1, corr: 3 }, false).calculateLength;
-// new Initial({ unit: 2, corr: 4 }, false).calculateLength;
-// new Initial({ unit: 1, corr: 5 }, false).calculateLength;
-// new Initial({ unit: 1, corr: 6 }, false).calculateLength;
 
