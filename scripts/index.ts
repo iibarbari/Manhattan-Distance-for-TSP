@@ -1,5 +1,5 @@
-const { Initial, Manhattan } = require('./manhattan');
+const distance = require('./manhattan');
 const { Matrix } = require('./matrix');
 const { NearestNeighbour } = require('./nearestNeighbour');
 
-export { Initial, Manhattan, Matrix, NearestNeighbour };
+export { distance, Matrix, NearestNeighbour };

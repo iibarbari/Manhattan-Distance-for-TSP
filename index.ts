@@ -1,26 +1,23 @@
 const fs = require('fs');
 const path = require('path');
-const _ = require('lodash')
+const range = require('lodash/range');
 const { NearestNeighbour, Matrix } = require('./scripts');
 
 const corridorCount = 6;
 const unitCount = 28;
-const units: { corr: number, unit: number }[] = [{ corr: 0, unit: 0 }];
+const unitArr: [number, number][] = [[0, 0]];
 
-_.range(1, corridorCount + 1).forEach((corr: number) => {
-  _.range(1, unitCount + 1).forEach((unit: number) => {
-    units.push({
-      corr,
-      unit
-    });
+range(1, corridorCount + 1).forEach((corr: number) => {
+  range(1, unitCount + 1).forEach((unit: number) => {
+    unitArr.push([corr, unit]);
   });
 });
 
 
-const matrix = new Matrix(units).calculateMatrix;
+const matrix = new Matrix(unitArr).calculateMatrix;
 
 
-fs.writeFile(path.join(__dirname, 'matrix.json'), JSON.stringify(matrix),()=>{});
+fs.writeFile(path.join(__dirname, 'matrix.json'), JSON.stringify(matrix), () => {});
 
 
 // let rawData = fs.readFileSync(path.join(__dirname, 'matrix.json'));

@@ -1,4 +1,6 @@
 .idea
+.DS_Store
 /**/*.js
+/**/*.xlsx
 yarn.lock
 node_modules

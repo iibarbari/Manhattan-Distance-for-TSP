@@ -1,264 +1,140 @@
-const { isEqual } = require('lodash');
+const tests = require('./test');
+const isEqual = require('lodash/isEqual');
 
-function initial(from: Point, to: Point) {
-  // Depot variables
-  const corridors = 6;
-  const units = 28;
+const corridors = 6;
+const lateral = 4;
+const corner = 1;
+const units = 14;
 
-  // Lateral variables
-  const corner = 2;
-  const lateral = 1;
+type Point = [number, number];
+type Coordinate = number;
 
-  function corrIsUpwards(corr: number) {
-    return corr % 2 === 1;
-  }
-
-  function distance(from: number[], to: number[]) {
-    // doesn't move
-    if (isEqual(from, to)) {
-      return 0;
-    }
-
-    // starts from initial point
-    else if (isEqual(from, [0, 0])) {
-      const midPoint = (corner * corridors + (corridors - 1) * lateral * 2) / 2;
-      const corrLateralDistance =
-        (to[0] - 1) * corner + (to[0] - 1) * lateral * 2;
-
-      let lateralLength = 0;
-
-      if (corrIsUpwards(to[0])) {
-        if (midPoint > corrLateralDistance) {
-          lateralLength = midPoint - corrLateralDistance;
-        } else {
-          lateralLength = corrLateralDistance - midPoint + corner;
-        }
-      } else {
-        if (to[0] === corridors / 2 + 1) {
-          lateralLength = 2 * corner + 2 * lateral + lateral + corner;
-        } else if (midPoint > corrLateralDistance) {
-          lateralLength = 2 * corner + 2 * lateral + lateral + corner;
-        } else {
-          lateralLength = 4 * corner + 4 * lateral + lateral;
-        }
-      }
-
-      // has to go upwards
-      if (corrIsUpwards(to[0])) {
-        return lateralLength + Math.round(to[1] / 2);
-      } else {
-        return lateralLength + units + Math.round(to[1] / 2) - 1;
-      }
-    }
-
-    // goes back to initial point
-    else if (isEqual([0, 0], to)) {
-      const midPoint = (corner * corridors + (corridors - 1) * lateral * 2) / 2;
-      const corrLateralDistance =
-        from[0] * corner + (from[0] - 1) * lateral * 2;
-
-      let lateralLength = 0;
-
-      // calculate lateral length
-      // goes upwards
-      if (corrIsUpwards(from[0])) {
-        // exception
-        if (from[0] === corridors / 2) {
-          lateralLength = 3 * corner + 3 * lateral;
-        }
-
-        // if corr is after midPoint
-        else if (corrLateralDistance > midPoint) {
-          lateralLength = corrLateralDistance - midPoint + corner;
-        }
-
-        // if corr is before midPoint
-        else {
-          lateralLength = midPoint - corrLateralDistance + 2 * corner;
-        }
-      }
-      // goes downwards
-      else {
-        // if corr is after midPoint
-        if (corrLateralDistance > midPoint) {
-          lateralLength = corrLateralDistance - midPoint - corner;
-        }
-
-        // if corr is before midPoint
-        else {
-          lateralLength = midPoint - corrLateralDistance;
-        }
-      }
-
-      // calculate distance
-      // has to go upwards
-      if (corrIsUpwards(from[0])) {
-        const passedCorridor = units / 2;
-        const exitCorr = units / 2 - Math.round(from[1] / 2);
-
-        return exitCorr + passedCorridor + lateralLength;
-      }
-
-      // has to go downwards
-      else {
-        return lateralLength + corner + Math.round(from[1] / 2) - 1;
-      }
-    }
-  }
-
-  return distance([from.corr, from.unit], [to.corr, to.unit]);
+function parseLocation(p: Point): Point {
+  return [p[0], Math.round(p[1] / 2)];
 }
 
-type Point = {
-  corr: number,
-  unit: number,
+function goForwardInLane(f: Point, t: Point): number | Error {
+  const d = t[1] - f[1];
+
+  if (f[0] % 2 === 1) {
+    return d > -1 ? d : new Error('Route not available');
+  }
+
+  return d <= 0 ? Math.abs(d) : new Error('Route not available');
 }
 
-export class Manhattan {
-  cornerLength: number;
-  from: Point;
-  fromDir: boolean;
-  fromPoint: number;
-  hallLength: number;
-  lateralLength: number;
-  to: Point;
-  toDir: boolean;
-  toPoint: number;
+function direction(p: Coordinate): string {
+  return (p % 2 === 1) ? 'up' : 'down';
+}
 
-  constructor(
-    from: Point,
-    to: Point,
-    lateralLength = 2,
-    hallLength = 14,
-    cornerLength = 2
-  ) {
-    this.cornerLength = cornerLength;
-    this.from = from;
-    this.fromDir = this.findDirection(from.corr);
-    this.fromPoint = Math.round(from.unit / 2);
-    this.hallLength = hallLength;
-    this.lateralLength = lateralLength;
-    this.to = to;
-    this.toDir = this.findDirection(to.corr);
-    this.toPoint = Math.round(to.unit / 2);
+function changeLanes(f: Point, t: Point): number {
+  // if goes back to the same lane
+  if (f[0] === t[0]) {
+    return 4 * corner + 2 * lateral + units;
   }
 
-  findDirection(corr: number) {
-    return corr % 2 === 1;
+  const isSameDirection = direction(f[0]) === direction(t[0]);
+  const laneChange = Math.abs(f[0] - t[0]);
+
+  const exitCorners = 2;
+  const passedCorners = laneChange - 1;
+  const passedLateral = laneChange;
+  const turns = isSameDirection ? 1 : 0;
+
+  return (
+    exitCorners * corner +
+    passedCorners * corner * 2 +
+    turns * units +
+    passedLateral * lateral
+  );
+}
+
+function distance(f: Point, t: Point) {
+  const from = parseLocation(f);
+  const to = parseLocation(t);
+  const exitPoint: Point = direction(from[0]) === 'up' ? [from[0], units] : [from[0], 1];
+  const entrancePoint: Point = direction(to[0]) === 'up' ? [to[0], 1] : [to[0], units];
+
+  if (isEqual(f, [0, 0]) || isEqual([0, 0], t)) {
+    return distanceToInitial(from, to);
   }
 
-  outerDistance(sameDir: boolean) {
-    const { cornerLength, from, to, lateralLength, fromDir, toDir, hallLength } = this;
-
-    if (from !== undefined && to !== undefined) {
-      const corners = (Math.abs(to.corr - from.corr) + (sameDir ? 2 : 1)) * cornerLength;
-      const lateral = Math.abs(to.corr - from.corr) * lateralLength;
-
-      return fromDir === toDir ? hallLength + lateral + corners : lateral + corners;
-    }
-
+  if (isEqual(f, t)) {
     return 0;
-  };
-
-  handleSameCorridor(direction?: true) {
-    const { cornerLength, fromDir, lateralLength, hallLength, fromPoint, toPoint } = this;
-
-    if (direction) {
-      return Math.abs(toPoint - fromPoint);
-    } else {
-      if (fromDir) {
-        return 2 * lateralLength + 4 * cornerLength + hallLength + hallLength - fromPoint + toPoint;
-      } else {
-        return 2 * lateralLength + 4 * cornerLength + hallLength + hallLength - toPoint + fromPoint;
-      }
-    }
   }
+  const exitDistance = goForwardInLane(from, exitPoint);
+  const laneDistance = changeLanes(from, to);
+  const entranceDistance = goForwardInLane(entrancePoint, to);
 
-  handleDiffCorridorsDiffDirs() {
-    const { fromDir, toDir, hallLength, fromPoint, toPoint } = this;
+  if (typeof entranceDistance === 'number' && typeof exitDistance === 'number') {
+    return exitDistance + laneDistance + entranceDistance + 1;
 
-    if (fromDir) {
-      return this.outerDistance(fromDir === toDir) + (hallLength - fromPoint + 1) + (hallLength - toPoint);
-    } else {
-      return this.outerDistance(fromDir === toDir) + fromPoint - 1 + toPoint;
-    }
-  }
-
-  handleDiffCorridorsSameDir() {
-    const { fromDir, toDir, hallLength, fromPoint, toPoint } = this;
-
-    if (fromDir) {
-      return this.outerDistance(fromDir === toDir) + (hallLength - fromPoint) + toPoint;
-    } else {
-      return this.outerDistance(fromDir === toDir) + (fromPoint - 1) + (hallLength - toPoint + 1);
-    }
-  }
-
-  get details() {
-    const { fromDir, toDir, from, to } = this;
-
-    if (from !== undefined && to !== undefined) {
-      return [
-        (fromDir ? 'up' : 'down'),
-        (toDir ? 'up' : 'down'),
-        (from.corr == to.corr && Math.round(from.unit / 2) === Math.round(to.unit / 2) ? 'stays' : 'moves'),
-        (from.corr == to.corr ? 'same' : 'different'),
-        (
-          from.corr > to.corr ||
-          (from.corr === to.corr && fromDir && to.unit > from.unit) ||
-          (from.corr === to.corr && !fromDir && from.unit > to.unit) ?
-            'forwards' :
-            'backwards'
-        )
-      ].join('|');
-    }
-  }
-
-  distance(givenFrom = this.from,
-    givenTo = this.to,
-    givenFromDir = this.fromDir,
-    givenToDir = this.toDir): number | undefined | Error {
-
-    if (givenFrom !== undefined && givenTo !== undefined) {
-      let distance;
-
-      // starts from initial and goes to initial
-      if (isEqual(givenTo, givenFrom)) {
-        distance = 0;
-
-        // starts from initial
-      } else if (givenFrom.unit === 0 && givenFrom.corr === 0) {
-        distance = initial({ unit: 0, corr: 0 }, givenTo);
-
-        // goes from initial
-      } else if (givenTo.unit === 0 && givenTo.corr === 0) {
-        distance = initial(givenFrom, { unit: 0, corr: 0 });
-
-        // travels from unit o unit
-      } else {
-        if (givenFrom.corr === givenTo.corr) {
-          if (Math.round(givenFrom.unit / 2) === Math.round(givenTo.unit / 2)) {
-            distance = 0;
-          } else {
-            if (givenFromDir && givenTo.unit > givenFrom.unit || !givenFromDir && givenTo.unit < givenTo.unit) {
-              distance = this.handleSameCorridor(true);
-            } else if (givenFromDir && givenFrom.unit > givenTo.unit || !givenFromDir && givenFrom.unit < givenTo.unit) {
-              distance = this.handleSameCorridor();
-            } else {
-              distance = 0;
-            }
-          }
-        } else if (givenFrom.corr !== givenTo.corr && givenFromDir !== givenToDir) {
-          distance = this.handleDiffCorridorsDiffDirs();
-        } else if (givenFrom.corr !== givenTo.corr && givenFromDir === givenToDir) {
-          distance = this.handleDiffCorridorsSameDir();
-        }
-      }
-
-      return distance;
-    }
-
-    return new Error('Please give two points');
   }
 }
 
+function moveLane(change: number) {
+  return corner * 2 + (change - 1) * corner * 2 + change * lateral;
+}
+
+function distanceToInitial(f: Point, t: Point): number | Error {
+  const goToMiddle = corner + lateral / 2;
+
+  // Moves from center to point t
+  if (f[0] === 0) {
+    const closerTo = t[0] > corridors / 2 ? corridors / 2 + 1 : corridors / 2;
+    const change = Math.abs(closerTo - t[0]);
+
+    if (direction(t[0]) === 'up') {
+      const exit = goForwardInLane([t[0], 1], t);
+      return typeof exit === 'number' ? goToMiddle + moveLane(change) + exit + 1 : new Error('oops');
+    } else {
+      if (closerTo === t[0]) {
+        const exit = goForwardInLane([t[0], units], t);
+
+        return typeof exit === 'number' ? goToMiddle + moveLane(1) + units + exit + 1 : new Error('oops');
+      }
+
+      const exit = goForwardInLane([t[0], units], t);
+      return typeof exit === 'number' ? goToMiddle + moveLane(change) + units + exit + 1 : new Error('oops');
+    }
+  }
+  // Moves from point to center
+  else if (t[0] === 0) {
+    const closerTo = f[0] > corridors / 2 ? corridors / 2 + 1 : corridors / 2;
+    const change = Math.abs(closerTo - f[0]);
+
+    if (direction(f[0]) === 'up') {
+      if (closerTo === f[0]) {
+        const exit = goForwardInLane(f, [f[0], units]);
+
+        return typeof exit === 'number' ? goToMiddle + moveLane(1) + units + exit : new Error('oops');
+      }
+
+      const exit = goForwardInLane(f, [f[0], units]);
+
+      return typeof exit === 'number' ? goToMiddle + moveLane(change) + units + exit : new Error('oops');
+    } else {
+      const exit = goForwardInLane(f, [f[0], 1]);
+
+      return typeof exit === 'number' ? goToMiddle + moveLane(change) + exit : new Error('oops');
+    }
+  }
+
+  return 0;
+}
+
+tests.forEach(({ from, to, result }: {
+  from: [number, number],
+  to: [number, number],
+  result: number
+}) => {
+  console.log(
+    from,
+    '->',
+    to,
+    distance(from, to),
+    distance(from, to) === result
+  );
+});
+
+module.exports = distance;

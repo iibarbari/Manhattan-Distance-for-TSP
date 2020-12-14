@@ -1,14 +1,10 @@
-const { Manhattan } = require('./manhattan');
+const distance = require('./manhattan');
 
-type Point = {
-  corr: number,
-  unit: number,
-}
 
 export class Matrix {
-  points: Point[];
+  points: [number, number][];
 
-  constructor(points: Point[]) {
+  constructor(points: [number, number][]) {
     this.points = points;
   }
 
@@ -18,9 +14,7 @@ export class Matrix {
     this.points.forEach(from => {
       let row: number[] = [];
       this.points.forEach(to => {
-        const distance = new Manhattan(from, to).distance();
-
-        row.push(distance);
+        row.push(distance(from, to));
       });
 
       matrix.push(row);
