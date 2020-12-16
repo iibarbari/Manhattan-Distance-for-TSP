@@ -1,6 +1,5 @@
 const distance = require('./manhattan');
 
-
 export class Matrix {
   points: [number, number][];
 

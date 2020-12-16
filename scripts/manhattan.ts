@@ -56,7 +56,7 @@ function distance(f: Point, t: Point) {
   const entrancePoint: Point = direction(to[0]) === 'up' ? [to[0], 1] : [to[0], units];
 
   if (isEqual(f, [0, 0]) && isEqual([0, 0], t)) {
-    return 0;
+    return 200;
   }
 
   if (isEqual(f, [0, 0]) || isEqual([0, 0], t)) {
@@ -64,7 +64,7 @@ function distance(f: Point, t: Point) {
   }
 
   if (isEqual(f, t)) {
-    return 0;
+    return 200;
   }
   const exitDistance = goForwardInLane(from, exitPoint);
   const laneDistance = changeLanes(from, to);
@@ -124,7 +124,7 @@ function distanceToInitial(f: Point, t: Point): number | Error {
     }
   }
 
-  return 0;
+  return 200;
 }
 
 tests.forEach(({ from, to, result }: {
