@@ -1,30 +1,21 @@
-const fs = require('fs');
-const path = require('path');
-const range = require('lodash/range');
-const { NearestNeighbour, Matrix } = require('./scripts');
+// import * as fs from 'fs';
+// import path from 'path';
+import { createDistanceMatrix, nearestNeighbor } from './scripts';
 
-const corridorCount = 6;
-const unitCount = 28;
-const unitArr: [number, number][] = [[0, 0]];
+const result = nearestNeighbor();
 
-range(1, corridorCount + 1).forEach((corr: number) => {
-  range(1, unitCount + 1).forEach((unit: number) => {
-    unitArr.push([corr, unit]);
-  });
-});
+console.log(result);
 
+// createDistanceMatrix();
+//
+// fs.readFile(path.join(__dirname, 'scripts/distanceMatrix/matrix.json'), (res, rawData) => {
+//   const data = JSON.parse(rawData.toString());
+//
+//   console.log(data);
+// });
 
-const matrix = new Matrix(unitArr).calculateMatrix;
-
-
-fs.writeFile(path.join(__dirname, 'matrix.json'), JSON.stringify(matrix), () => {});
-
-
-// let rawData = fs.readFileSync(path.join(__dirname, 'matrix.json'));
-// let matrix = JSON.parse(rawData);
 
 // const paths = new NearestNeighbour(matrix).tour()
-
 
 // const paths = new NearestNeighbour([
 //   [0, 132, 217, 164, 58],

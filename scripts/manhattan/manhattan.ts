@@ -1,10 +1,8 @@
-const tests = require('./test');
+// const tests = require('./test');
 const isEqual = require('lodash/isEqual');
 
-const corridors = 6;
 const lateral = 4;
 const corner = 1;
-const units = 14;
 
 type Point = [number, number];
 type Coordinate = number;
@@ -27,7 +25,7 @@ function direction(p: Coordinate): string {
   return (p % 2 === 1) ? 'up' : 'down';
 }
 
-function changeLanes(f: Point, t: Point): number {
+function changeLanes(f: Point, t: Point, units: number): number {
   // if goes back to the same lane
   if (f[0] === t[0]) {
     return 4 * corner + 2 * lateral + units;
@@ -49,25 +47,26 @@ function changeLanes(f: Point, t: Point): number {
   );
 }
 
-function distance(f: Point, t: Point) {
+export default function distance(f: Point, t: Point, units: number, corridors: number) {
   const from = parseLocation(f);
   const to = parseLocation(t);
   const exitPoint: Point = direction(from[0]) === 'up' ? [from[0], units] : [from[0], 1];
   const entrancePoint: Point = direction(to[0]) === 'up' ? [to[0], 1] : [to[0], units];
 
   if (isEqual(f, [0, 0]) && isEqual([0, 0], t)) {
-    return 200;
+    return 2000;
   }
 
   if (isEqual(f, [0, 0]) || isEqual([0, 0], t)) {
-    return distanceToInitial(from, to);
+    return distanceToInitial(from, to, units, corridors);
   }
 
   if (isEqual(f, t)) {
-    return 200;
+    return 2000;
   }
+
   const exitDistance = goForwardInLane(from, exitPoint);
-  const laneDistance = changeLanes(from, to);
+  const laneDistance = changeLanes(from, to, units);
   const entranceDistance = goForwardInLane(entrancePoint, to);
 
   if (typeof entranceDistance === 'number' && typeof exitDistance === 'number') {
@@ -80,7 +79,7 @@ function moveLane(change: number) {
   return corner * 2 + (change - 1) * corner * 2 + change * lateral;
 }
 
-function distanceToInitial(f: Point, t: Point): number | Error {
+function distanceToInitial(f: Point, t: Point, units: number, corridors: number): number | Error {
   const goToMiddle = corner + lateral / 2;
 
   // Moves from center to point t
@@ -124,21 +123,21 @@ function distanceToInitial(f: Point, t: Point): number | Error {
     }
   }
 
-  return 200;
+  return 2000;
 }
 
-tests.forEach(({ from, to, result }: {
-  from: [number, number],
-  to: [number, number],
-  result: number
-}) => {
-  console.log(
-    from,
-    '->',
-    to,
-    distance(from, to),
-    distance(from, to) === result
-  );
-});
+// tests.forEach(({ from, to, result }: {
+//   from: [number, number],
+//   to: [number, number],
+//   result: number
+// }) => {
+//   console.log(
+//     from,
+//     '->',
+//     to,
+//     distance(from, to, 14, 6),
+//     distance(from, to, 14, 6) === result
+//   );
+// });
 
 module.exports = distance;
